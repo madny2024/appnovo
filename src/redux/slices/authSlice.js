@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   userInfo: null,
   serverInfo: null,
-  credentials: null, // { username, password, host }
+  credentials: null,
   status: 'idle',
 };
 
@@ -12,19 +12,30 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { user_info, server_info } = action.payload.data;
-      const { username, password, host } = action.payload.credentials;
-      state.userInfo = user_info;
-      state.serverInfo = server_info;
-      state.credentials = { username, password, host };
-      state.status = 'succeeded';
+      // Extração segura dos dados do payload da ação
+      const responseData = action.payload.data || {};
+      const loginCredentials = action.payload.credentials || {};
+
+      const userInfo = responseData.user_info;
+      const serverInfo = responseData.server_info;
+      
+      // Verificação de segurança: só atualiza o estado se os dados essenciais existirem
+      if (userInfo && serverInfo && loginCredentials.host) {
+        state.userInfo = userInfo;
+        state.serverInfo = serverInfo;
+        state.credentials = loginCredentials;
+        state.status = 'succeeded';
+      } else {
+        // Se os dados estiverem incompletos, não quebra o app, apenas registra um erro.
+        state.status = 'failed';
+        console.error("Falha ao processar credenciais: dados da API incompletos ou inválidos.", action.payload);
+      }
     },
     logOut: (state) => {
       state.userInfo = null;
       state.serverInfo = null;
       state.credentials = null;
       state.status = 'idle';
-      // Limpa o localStorage ao deslogar
       localStorage.removeItem('authState');
     },
   },
