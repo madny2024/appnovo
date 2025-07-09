@@ -8,23 +8,19 @@ export default async function handler(request, response) {
   try {
     const proxyResponse = await fetch(targetUrl);
 
-    // ===================================================================
-    // || INÍCIO DA CORREÇÃO                                            ||
-    // ===================================================================
-    // Copia os cabeçalhos da resposta original, EXCETO o de codificação de conteúdo
-    proxyResponse.headers.forEach((value, key) => {
-      if (key.toLowerCase() !== 'content-encoding') {
-        response.setHeader(key, value);
-      }
-    });
-    // ===================================================================
-    // || FIM DA CORREÇÃO                                               ||
-    // ===================================================================
+    // Verificamos o tipo de conteúdo da resposta
+    const contentType = proxyResponse.headers.get('content-type') || '';
 
-    // Garante o cabeçalho de CORS, que é a razão de usarmos um proxy
+    // Adicionamos nosso cabeçalho de CORS
     response.setHeader('Access-Control-Allow-Origin', '*');
 
-    // Envia a resposta original (seja JSON ou vídeo) de volta para o app
+    // Se a resposta for JSON, lemos como texto e enviamos como JSON
+    if (contentType.includes('application/json')) {
+      const json = await proxyResponse.json();
+      return response.status(proxyResponse.status).json(json);
+    }
+
+    // Para qualquer outra coisa (vídeos, etc.), enviamos o corpo diretamente (stream)
     response.status(proxyResponse.status);
     return response.send(proxyResponse.body);
 
