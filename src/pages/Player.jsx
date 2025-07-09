@@ -10,20 +10,24 @@ const Player = () => {
   const credentials = useSelector(selectAuthCredentials);
   const isAuthenticated = useSelector(selectIsAuthenticated);
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (!credentials) {
+  if (!isAuthenticated || !credentials) {
     return <div className="w-screen h-screen bg-black flex items-center justify-center"><Spinner /></div>;
   }
 
   const { username, password, host } = credentials;
   const streamIdWithExtension = type === 'live' ? `${id}.m3u8` : id;
-  const streamUrl = `${host}/${type}/${username}/${password}/${streamIdWithExtension}`;
 
-  // ADICIONE ESTA LINHA PARA DIAGNÓSTICO
-  console.log('PLAYER.JSX: Enviando esta URL para o VideoPlayer ->', streamUrl);
+  // ===================================================================
+  // || INÍCIO DA MUDANÇA                                             ||
+  // ===================================================================
+  // 1. Cria a URL original e insegura
+  const originalStreamUrl = `${host}/${type}/${username}/${password}/${streamIdWithExtension}`;
+  
+  // 2. Cria a nova URL segura que passa pelo nosso proxy
+  const streamUrl = `/api/proxy?target=${encodeURIComponent(originalStreamUrl)}`;
+  // ===================================================================
+  // || FIM DA MUDANÇA                                                ||
+  // ===================================================================
 
   return (
     <div className="w-screen h-screen">
