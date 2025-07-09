@@ -1,4 +1,3 @@
-// Este proxy aprimorado lida com qualquer tipo de conteúdo
 export default async function handler(request, response) {
   const targetUrl = request.query.target;
 
@@ -7,13 +6,20 @@ export default async function handler(request, response) {
   }
 
   try {
-    // Faz a requisição para o servidor de IPTV
     const proxyResponse = await fetch(targetUrl);
 
-    // Copia os cabeçalhos da resposta original para a nossa resposta
+    // ===================================================================
+    // || INÍCIO DA CORREÇÃO                                            ||
+    // ===================================================================
+    // Copia os cabeçalhos da resposta original, EXCETO o de codificação de conteúdo
     proxyResponse.headers.forEach((value, key) => {
-      response.setHeader(key, value);
+      if (key.toLowerCase() !== 'content-encoding') {
+        response.setHeader(key, value);
+      }
     });
+    // ===================================================================
+    // || FIM DA CORREÇÃO                                               ||
+    // ===================================================================
 
     // Garante o cabeçalho de CORS, que é a razão de usarmos um proxy
     response.setHeader('Access-Control-Allow-Origin', '*');
