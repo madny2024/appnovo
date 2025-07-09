@@ -8,20 +8,38 @@ export default async function handler(request, response) {
   try {
     const proxyResponse = await fetch(targetUrl);
 
-    // Verificamos o tipo de conteúdo da resposta
+    // Verificamos o tipo de conteúdo da resposta do servidor de IPTV
     const contentType = proxyResponse.headers.get('content-type') || '';
 
-    // Adicionamos nosso cabeçalho de CORS
+    // Adicionamos nosso cabeçalho de permissão CORS
     response.setHeader('Access-Control-Allow-Origin', '*');
+    
+    // Copiamos o status code da resposta original
+    response.status(proxyResponse.status);
 
-    // Se a resposta for JSON, lemos como texto e enviamos como JSON
+    // ===================================================================
+    // || INÍCIO DA CORREÇÃO                                            ||
+    // ===================================================================
+    // Lógica com 3 modos: JSON, Playlist de Texto (M3U8), e Stream (outros)
+
+    // Modo 1: Se a resposta for JSON
     if (contentType.includes('application/json')) {
       const json = await proxyResponse.json();
-      return response.status(proxyResponse.status).json(json);
+      return response.json(json);
     }
 
-    // Para qualquer outra coisa (vídeos, etc.), enviamos o corpo diretamente (stream)
-    response.status(proxyResponse.status);
+    // Modo 2: Se for uma playlist M3U8 (o tipo de conteúdo geralmente inclui 'mpegurl')
+    if (contentType.includes('mpegurl')) {
+      const text = await proxyResponse.text();
+      // Retornamos o texto puro com o content-type correto
+      response.setHeader('Content-Type', contentType);
+      return response.send(text);
+    }
+    // ===================================================================
+    // || FIM DA CORREÇÃO                                               ||
+    // ===================================================================
+
+    // Modo 3: Para qualquer outra coisa (vídeos .ts, .mp4, etc.), enviamos o corpo diretamente
     return response.send(proxyResponse.body);
 
   } catch (error) {
