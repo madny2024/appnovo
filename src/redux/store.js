@@ -2,9 +2,11 @@ import { configureStore } from '@reduxjs/toolkit';
 import { xtreamApi } from './api/xtreamApi';
 import authReducer from './slices/authSlice';
 import contentReducer from './slices/contentSlice';
-import { loadState, saveState } from '../utils/localStorage';
+// As linhas de 'localStorage' foram removidas para o teste.
+// import { loadState, saveState } from '../utils/localStorage';
 
-const preloadedState = loadState();
+// A linha 'preloadedState' foi removida para o teste.
+// const preloadedState = loadState();
 
 export const store = configureStore({
   reducer: {
@@ -14,10 +16,11 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(xtreamApi.middleware),
-  preloadedState: { auth: preloadedState },
+  // A chave 'preloadedState' foi removida para o teste.
+  // preloadedState: { auth: preloadedState },
 });
 
-// Salva o estado de autenticação no localStorage sempre que ele mudar
-store.subscribe(() => {
-  saveState(store.getState().auth);
-});
+// A função 'subscribe' foi removida para o teste.
+// store.subscribe(() => {
+//   saveState(store.getState().auth);
+// });
