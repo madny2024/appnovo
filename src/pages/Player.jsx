@@ -1,0 +1,35 @@
+import React from 'react';
+import { useParams, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectAuthCredentials, selectIsAuthenticated } from '../redux/slices/authSlice';
+import VideoPlayer from '../components/player/VideoPlayer';
+import Spinner from '../components/core/Spinner';
+
+const Player = () => {
+  const { type, id } = useParams();
+  const credentials = useSelector(selectAuthCredentials);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!credentials) {
+    return <div className="w-screen h-screen bg-black flex items-center justify-center"><Spinner /></div>;
+  }
+
+  const { username, password, host } = credentials;
+  const streamIdWithExtension = type === 'live' ? `${id}.m3u8` : id;
+  const streamUrl = `${host}/${type}/${username}/${password}/${streamIdWithExtension}`;
+
+  // ADICIONE ESTA LINHA PARA DIAGNÓSTICO
+  console.log('PLAYER.JSX: Enviando esta URL para o VideoPlayer ->', streamUrl);
+
+  return (
+    <div className="w-screen h-screen">
+      <VideoPlayer src={streamUrl} />
+    </div>
+  );
+};
+
+export default Player;
